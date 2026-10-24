@@ -1,5 +1,6 @@
 import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
+import { IndustrialToast } from "../core/industrial-ui.js";
 
 (function initReportesModule() {
   const appCore = new AppCore();
@@ -198,10 +199,10 @@ import { LayoutManager } from "../core/layout.js";
 
     tbody.innerHTML = datos.map((d) => `
       <tr>
-        <td>${d.categoria}</td>
-        <td>${d.unidades}</td>
-        <td>${AppCore.formatCurrency(d.ingreso)}</td>
-        <td>${d.porcentaje}%</td>
+        <td class="text-left font-medium">${d.categoria}</td>
+        <td class="text-right font-mono tabular-nums">${d.unidades}</td>
+        <td class="text-right font-mono tabular-nums">${AppCore.formatCurrency(d.ingreso)}</td>
+        <td class="text-right font-mono tabular-nums">${d.porcentaje}%</td>
       </tr>`).join("");
   }
 
@@ -365,13 +366,13 @@ import { LayoutManager } from "../core/layout.js";
 
     tbody.innerHTML = datos.map((d) => `
       <tr>
-        <td>${d.codigo}</td>
-        <td>${d.nombre}</td>
-        <td>${d.categoria}</td>
-        <td>${d.stock}</td>
-        <td>${AppCore.formatCurrency(d.costoUnitario)}</td>
-        <td>${AppCore.formatCurrency(d.valorizacion)}</td>
-        <td><span class="badge ${d.estadoClass}">${d.estado}</span></td>
+        <td class="text-center font-mono">${d.codigo}</td>
+        <td class="text-left font-medium">${d.nombre}</td>
+        <td class="text-left">${d.categoria}</td>
+        <td class="text-right font-mono tabular-nums">${d.stock}</td>
+        <td class="text-right font-mono tabular-nums">${AppCore.formatCurrency(d.costoUnitario)}</td>
+        <td class="text-right font-mono tabular-nums">${AppCore.formatCurrency(d.valorizacion)}</td>
+        <td class="text-center"><span class="badge ${d.estadoClass}">${d.estado}</span></td>
       </tr>`).join("");
   }
 
@@ -396,12 +397,12 @@ import { LayoutManager } from "../core/layout.js";
       const tipoLabel = m.tipo === "entrada" ? "Entrada" : "Salida";
       return `
         <tr>
-          <td>${AppCore.formatDate(m.fecha)}</td>
-          <td><span class="badge ${tipoClass}">${tipoLabel}</span></td>
-          <td>${producto?.nombre || "N/A"}</td>
-          <td>${m.cantidad}</td>
-          <td>${m.motivo || "-"}</td>
-          <td>${m.usuario || "Admin"}</td>
+          <td class="text-center font-mono">${AppCore.formatDate(m.fecha)}</td>
+          <td class="text-center"><span class="badge ${tipoClass}">${tipoLabel}</span></td>
+          <td class="text-left font-medium">${producto?.nombre || "N/A"}</td>
+          <td class="text-right font-mono tabular-nums">${m.cantidad}</td>
+          <td class="text-left">${m.motivo || "-"}</td>
+          <td class="text-left">${m.usuario || "Admin"}</td>
         </tr>`;
     }).join("");
   }
@@ -438,12 +439,12 @@ import { LayoutManager } from "../core/layout.js";
 
     tbody.innerHTML = ranking.map((p, i) => `
       <tr>
-        <td><span class="badge ${i < 3 ? "badge--success" : "badge--neutral"}">#${i + 1}</span></td>
-        <td>${p.codigo}</td>
-        <td>${p.nombre}</td>
-        <td>${p.categoria}</td>
-        <td>${p.unidades}</td>
-        <td>${AppCore.formatCurrency(p.ingreso)}</td>
+        <td class="text-center"><span class="badge ${i < 3 ? "badge--success" : "badge--neutral"}">#${i + 1}</span></td>
+        <td class="text-center font-mono">${p.codigo}</td>
+        <td class="text-left font-medium">${p.nombre}</td>
+        <td class="text-left">${p.categoria}</td>
+        <td class="text-right font-mono tabular-nums">${p.unidades}</td>
+        <td class="text-right font-mono tabular-nums">${AppCore.formatCurrency(p.ingreso)}</td>
       </tr>`).join("");
   }
 
@@ -463,7 +464,7 @@ import { LayoutManager } from "../core/layout.js";
   }
 
   function exportarPDF() {
-    alert("La exportación a PDF estará disponible próximamente.\nUse 'Exportar Excel' para descargar los datos.");
+    IndustrialToast.info("La exportación a PDF estará disponible próximamente. Utilice 'Exportar Excel' para descargar los datos.");
   }
 
   // ---------------------------------------------------------------

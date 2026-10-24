@@ -2,6 +2,7 @@ import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { ActionSheet } from "../core/action-sheet.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
 
 (function initMovimientosModule() {
   const appCore = new AppCore();
@@ -54,14 +55,14 @@ import { Validations } from "../core/validations.js";
         const tipoLabel = m.tipo === "entrada" ? "Entrada" : "Salida";
         return `
           <tr>
-            <td>${AppCore.formatDate(m.fecha)}</td>
-            <td><span class="badge ${tipoClass}">${tipoLabel}</span></td>
-            <td>${producto?.nombre || "N/A"}</td>
-            <td>${m.cantidad || 0}</td>
-            <td>${m.motivo || ""}</td>
-            <td>${m.usuario || "Admin"}</td>
-            <td class="table-actions">
-              <button class="btn btn-sm btn-primary" data-action="view" data-id="${m.id}"><i class="bi bi-eye"></i> Ver</button>
+            <td class="text-center font-mono text-muted">${AppCore.formatDate(m.fecha)}</td>
+            <td class="text-center"><span class="badge ${tipoClass}">${tipoLabel}</span></td>
+            <td class="text-left font-medium text-slate-900">${producto?.nombre || "N/A"}</td>
+            <td class="text-right font-mono tabular-nums font-semibold">${m.cantidad || 0}</td>
+            <td class="text-left text-muted">${m.motivo || "—"}</td>
+            <td class="text-center text-muted">${m.usuario || "Admin"}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline" data-action="view" data-id="${m.id}"><i class="bi bi-eye"></i> Ver</button>
             </td>
           </tr>`;
       })
@@ -85,7 +86,7 @@ import { Validations } from "../core/validations.js";
     const formData = new FormData(formMovimiento);
     const tipo = formData.get("tipo");
     const productoId = formData.get("productoId");
-    const cantidad = parseInt(formData.get("cantidad"));
+    const cantidad = parseInt(formData.get("cantidad"), 10);
     const motivo = (formData.get("motivo") || "").trim();
 
     const producto = appData.productos.find((p) => p.id === productoId);
@@ -96,11 +97,11 @@ import { Validations } from "../core/validations.js";
       [Validations.required(motivo, 3), "El motivo es obligatorio (mínimo 3 caracteres)."],
     ]);
     if (movimientoError) {
-      alert(movimientoError);
+      IndustrialToast.error(movimientoError);
       return;
     }
     if (tipo === "salida" && cantidad > (producto.stock || 0)) {
-      alert("No hay suficiente stock para realizar la salida.");
+      IndustrialToast.warning("No hay suficiente stock para realizar la salida.");
       return;
     }
 
@@ -122,6 +123,7 @@ import { Validations } from "../core/validations.js";
 
     AppCore.saveAppData(appData);
     closeModal();
+    IndustrialToast.success(`Movimiento de ${tipo === "entrada" ? "entrada" : "salida"} registrado correctamente.`);
     renderMovimientos();
     populateProductos();
     document.dispatchEvent(new CustomEvent("dataUpdated"));
@@ -143,12 +145,25 @@ import { Validations } from "../core/validations.js";
           { label: "Fecha", value: AppCore.formatDateTime(movimiento.fecha) },
           { label: "Tipo", value: movimiento.tipo === "entrada" ? "Entrada" : "Salida" },
           { label: "Producto", value: producto?.nombre },
-          { label: "Cantidad", value: movimiento.cantidad },
+          { label: "Cantidad", value: `${movimiento.cantidad} UND` },
           { label: "Motivo", value: movimiento.motivo },
           { label: "Usuario", value: movimiento.usuario || "Admin" },
         ],
-        onDelete: () => {
-          if (confirm("¿Eliminar este movimiento? Esto revertirá su efecto sobre el stock.")) {
+        onDelete: async () => {
+          const confirmado = await IndustrialDialog.confirm({
+            title: "Eliminar Movimiento",
+            message: "¿Deseas eliminar este movimiento? Su efecto sobre el stock será revertido.",
+            confirmText: "Eliminar y Revertir",
+            confirmVariant: "danger",
+            details: [
+              { label: "Tipo", value: movimiento.tipo === "entrada" ? "Entrada" : "Salida" },
+              { label: "Producto", value: producto?.nombre || "N/A" },
+              { label: "Cantidad", value: `${movimiento.cantidad} UND` },
+              { label: "Motivo", value: movimiento.motivo },
+            ],
+          });
+
+          if (confirmado) {
             const p = appData.productos.find((x) => x.id === movimiento.productoId);
             if (p) {
               if (movimiento.tipo === "entrada") {
@@ -159,6 +174,7 @@ import { Validations } from "../core/validations.js";
             }
             appData.movimientos = appData.movimientos.filter((m) => m.id !== id);
             AppCore.saveAppData(appData);
+            IndustrialToast.success("Movimiento eliminado y stock revertido.");
             renderMovimientos();
             populateProductos();
             document.dispatchEvent(new CustomEvent("dataUpdated"));

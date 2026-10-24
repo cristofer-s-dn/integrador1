@@ -2,6 +2,7 @@ import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { ActionSheet } from "../core/action-sheet.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
 
 (function initCategoriasModule() {
   const appCore = new AppCore();
@@ -42,12 +43,12 @@ import { Validations } from "../core/validations.js";
         const count = appData.productos.filter((p) => p.categoriaId === c.id).length;
         return `
           <tr>
-            <td>${c.id}</td>
-            <td>${c.nombre}</td>
-            <td>${c.descripcion || ""}</td>
-            <td>${count}</td>
-            <td class="table-actions">
-              <button class="btn btn-sm btn-primary" data-action="view" data-id="${c.id}"><i class="bi bi-eye"></i> Ver</button>
+            <td class="text-center font-mono font-semibold text-muted">${c.id}</td>
+            <td class="text-left font-medium text-slate-900">${c.nombre}</td>
+            <td class="text-left text-muted">${c.descripcion || "—"}</td>
+            <td class="text-right font-mono tabular-nums font-semibold">${count}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline" data-action="view" data-id="${c.id}"><i class="bi bi-eye"></i> Ver</button>
             </td>
           </tr>`;
       })
@@ -83,7 +84,7 @@ import { Validations } from "../core/validations.js";
       [!appData.categorias.some((c) => c.nombre.toLowerCase() === nombre.toLowerCase() && c.id !== editingId), "Ya existe una categoría con ese nombre."],
     ]);
     if (error) {
-      alert(error);
+      IndustrialToast.error(error);
       return;
     }
 
@@ -96,8 +97,10 @@ import { Validations } from "../core/validations.js";
     if (editingId) {
       const idx = appData.categorias.findIndex((c) => c.id === editingId);
       if (idx !== -1) appData.categorias[idx] = categoria;
+      IndustrialToast.success(`Categoría "${nombre}" actualizada.`);
     } else {
       appData.categorias.push(categoria);
+      IndustrialToast.success(`Categoría "${nombre}" creada.`);
     }
 
     AppCore.saveAppData(appData);
@@ -120,19 +123,32 @@ import { Validations } from "../core/validations.js";
         title: categoria.nombre,
         fields: [
           { label: "ID", value: categoria.id },
-          { label: "Descripción", value: categoria.descripcion },
-          { label: "Productos Asociados", value: count },
+          { label: "Descripción", value: categoria.descripcion || "—" },
+          { label: "Productos Asociados", value: `${count} productos` },
         ],
         onEdit: () => openModal(categoria),
-        onDelete: () => {
+        onDelete: async () => {
           const hasProducts = appData.productos.some((p) => p.categoriaId === id);
           if (hasProducts) {
-            alert("No se puede eliminar una categoría con productos asociados.");
+            IndustrialToast.warning("No se puede eliminar una categoría que tiene productos asociados.");
             return;
           }
-          if (confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) {
+          const confirmado = await IndustrialDialog.confirm({
+            title: "Eliminar Categoría",
+            message: `¿Estás seguro de que deseas eliminar la categoría "${categoria.nombre}"?`,
+            confirmText: "Eliminar Categoría",
+            confirmVariant: "danger",
+            details: [
+              { label: "ID Categoría", value: categoria.id },
+              { label: "Nombre", value: categoria.nombre },
+              { label: "Productos", value: `${count} asociados` },
+            ],
+          });
+
+          if (confirmado) {
             appData.categorias = appData.categorias.filter((c) => c.id !== id);
             AppCore.saveAppData(appData);
+            IndustrialToast.success(`Categoría "${categoria.nombre}" eliminada.`);
             renderCategorias();
             document.dispatchEvent(new CustomEvent("dataUpdated"));
           }

@@ -11,7 +11,8 @@ router.get("/", async (req, res) => {
     const prods = await pool.query(`
       SELECT p.id_producto AS id, p.codigo_producto AS codigo, p.nombre_producto AS nombre,
              p.descripcion, p.id_categoria AS "categoriaId", p.id_proveedor AS "proveedorId",
-             p.stock_actual AS stock, p.stock_minimo AS "stockMinimo", p.precio_venta AS precio
+             p.stock_actual AS stock, p.stock_minimo AS "stockMinimo", p.precio_venta AS precio,
+             p.precio_compra AS "precioCompra", p.precio_compra AS precio_compra, p.precio_venta AS "precioVenta"
       FROM productos p ORDER BY p.id_producto`);
     const clis = await pool.query("SELECT id_cliente AS id, nombre, contacto, telefono, correo AS email, direccion FROM clientes ORDER BY id_cliente");
     const movs = await pool.query(`
@@ -88,7 +89,7 @@ router.post("/", async (req, res) => {
       const provId = mapProv[p.proveedorId] || null;
       const r = await client.query(
         "INSERT INTO productos (codigo_producto, nombre_producto, descripcion, id_categoria, id_proveedor, stock_actual, stock_minimo, precio_venta, precio_compra, estado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id_producto",
-        [p.codigo || p.codigo_producto || "", p.nombre || p.nombre_producto || "", p.descripcion || "", catId, provId, p.stock ?? p.stock_actual ?? 0, p.stockMinimo ?? p.stock_minimo ?? 5, p.precio ?? p.precio_venta ?? 0, p.precio_compra ?? 0, p.estado || "activo"]
+        [p.codigo || p.codigo_producto || "", p.nombre || p.nombre_producto || "", p.descripcion || "", catId, provId, p.stock ?? p.stock_actual ?? 0, p.stockMinimo ?? p.stock_minimo ?? 5, p.precio ?? p.precio_venta ?? p.precioVenta ?? 0, p.precio_compra ?? p.precioCompra ?? 0, p.estado || "activo"]
       );
       mapProd[p.id] = r.rows[0].id_producto;
     }

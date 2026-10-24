@@ -67,12 +67,12 @@ import { LayoutManager } from "../core/layout.js";
         const tipoLabel = m.tipo === "entrada" ? "Entrada" : "Salida";
         return `
           <tr>
-            <td>${AppCore.formatDate(m.fecha)}</td>
-            <td><span class="badge ${tipoClass}">${tipoLabel}</span></td>
-            <td>${producto?.nombre || "N/A"}</td>
-            <td>${m.cantidad || 0}</td>
-            <td>${m.motivo || "-"}</td>
-            <td>${m.usuario || "Admin"}</td>
+            <td class="text-center font-mono">${AppCore.formatDate(m.fecha)}</td>
+            <td class="text-center"><span class="badge ${tipoClass}">${tipoLabel}</span></td>
+            <td class="text-left font-medium">${producto?.nombre || "N/A"}</td>
+            <td class="text-right font-mono tabular-nums">${m.cantidad || 0}</td>
+            <td class="text-left">${m.motivo || "-"}</td>
+            <td class="text-left">${m.usuario || "Admin"}</td>
           </tr>`;
       })
       .join("");
@@ -150,8 +150,8 @@ import { LayoutManager } from "../core/layout.js";
           {
             label: "Unidades vendidas",
             data,
-            backgroundColor: "rgba(13, 110, 253, 0.7)",
-            borderColor: "#0d6efd",
+            backgroundColor: "rgba(37, 99, 235, 0.75)",
+            borderColor: "#2563EB",
             borderWidth: 1.5,
             borderRadius: 6,
           },

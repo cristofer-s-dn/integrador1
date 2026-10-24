@@ -2,6 +2,7 @@ import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { ActionSheet } from "../core/action-sheet.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
 
 (function initInventarioModule() {
   const appCore = new AppCore();
@@ -32,16 +33,19 @@ import { Validations } from "../core/validations.js";
   const btnCancelarAjuste = document.getElementById("btnCancelarAjuste");
   const formAjustarStock = document.getElementById("formAjustarStock");
 
+  // Badges de edición segura
+  const currentStockBadge = document.getElementById("currentStock");
+  const currentPrecioCompraBadge = document.getElementById("currentPrecioCompra");
+  const currentPrecioVentaBadge = document.getElementById("currentPrecioVenta");
+
   let editingProductId = null;
   let adjustingProductId = null;
 
   function populateSelects() {
     if (filterCategoria) {
-      const current = filterCategoria.value;
       filterCategoria.innerHTML =
         '<option value="">Todas las categorías</option>' +
         appData.categorias.map((c) => `<option value="${c.id}">${c.nombre}</option>`).join("");
-      filterCategoria.value = current;
     }
 
     const selectCategoria = document.getElementById("selectCategoria");
@@ -80,10 +84,10 @@ import { Validations } from "../core/validations.js";
 
     if (filtered.length === 0) {
       tbody.innerHTML = `
-        <tr><td colspan="8">
+        <tr><td colspan="9">
           <div class="empty-state">
             <i class="bi bi-inbox empty-state__icon"></i>
-            <p class="empty-state__text">No se encontraron productos</p>
+            <p class="empty-state__text">No se encontraron productos en el inventario</p>
           </div>
         </td></tr>`;
       return;
@@ -95,17 +99,30 @@ import { Validations } from "../core/validations.js";
         const categoria = appData.categorias.find((c) => c.id === p.categoriaId);
         const badgeClass = AppCore.getEstadoBadgeClass(estado);
         const badgeLabel = AppCore.getEstadoLabel(estado);
+        const precioCompraNum = Number(p.precio_compra ?? p.precioCompra ?? 0);
+        const precioVentaNum = Number(p.precio ?? p.precio_venta ?? p.precioVenta ?? 0);
+        const stockNum = Number(p.stock ?? 0);
+        const stockMinNum = Number(p.stockMinimo ?? 5);
+
         return `
           <tr>
-            <td>${p.codigo || ""}</td>
-            <td>${p.nombre || ""}</td>
-            <td>${categoria?.nombre || ""}</td>
-            <td>${p.stock || 0}</td>
-            <td>${p.stockMinimo || 5}</td>
-            <td>${AppCore.formatCurrency(p.precio)}</td>
-            <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
-            <td class="table-actions">
-              <button class="btn btn-sm btn-primary" data-action="view" data-id="${p.id}"><i class="bi bi-eye"></i> Ver</button>
+            <td class="text-center font-mono font-semibold text-muted">${p.codigo || ""}</td>
+            <td class="text-left font-medium text-slate-900">${p.nombre || ""}</td>
+            <td class="text-left text-muted">${categoria?.nombre || "—"}</td>
+            <td class="text-right font-mono tabular-nums font-semibold">${stockNum}</td>
+            <td class="text-right font-mono tabular-nums text-muted">${stockMinNum}</td>
+            <td class="text-right font-mono tabular-nums font-semibold text-muted">
+              ${AppCore.formatCurrency(precioCompraNum)}
+            </td>
+            <td class="text-right font-mono tabular-nums font-semibold text-primary">
+              ${AppCore.formatCurrency(precioVentaNum)}
+            </td>
+            <td class="text-center"><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+            <td class="text-center">
+              <div class="btn-group" style="display:inline-flex; gap: 4px;">
+                <button class="btn btn-sm btn-outline" data-action="adjust" data-id="${p.id}" title="Ajustar Stock"><i class="bi bi-arrow-left-right"></i></button>
+                <button class="btn btn-sm btn-outline" data-action="view" data-id="${p.id}" title="Ver Detalles"><i class="bi bi-eye"></i></button>
+              </div>
             </td>
           </tr>`;
       })
@@ -114,22 +131,48 @@ import { Validations } from "../core/validations.js";
 
   function openProductModal(producto = null) {
     editingProductId = producto ? producto.id : null;
-    if (modalProductoTitulo) modalProductoTitulo.textContent = producto ? "Editar Producto" : "Nuevo Producto";
+    if (modalProductoTitulo) {
+      modalProductoTitulo.textContent = producto ? `Editar Producto — SKU: ${producto.codigo || ""}` : "Nuevo Producto";
+    }
 
     if (formProducto) {
       formProducto.reset();
+      const inputCodigo = document.getElementById("inputCodigo");
+      const inputNombre = document.getElementById("inputNombre");
+      const selectCategoria = document.getElementById("selectCategoria");
+      const selectProveedor = document.getElementById("selectProveedor");
+      const inputStock = document.getElementById("inputStock");
+      const inputStockMinimo = document.getElementById("inputStockMinimo");
+      const inputPrecioCompra = document.getElementById("inputPrecioCompra");
+      const inputPrecio = document.getElementById("inputPrecio");
+      const inputDescripcion = document.getElementById("inputDescripcion");
+
       if (producto) {
-        document.getElementById("inputCodigo").value = producto.codigo || "";
-        document.getElementById("inputNombre").value = producto.nombre || "";
-        document.getElementById("selectCategoria").value = producto.categoriaId || "";
-        document.getElementById("selectProveedor").value = producto.proveedorId || "";
-        document.getElementById("inputStock").value = producto.stock ?? 0;
-        document.getElementById("inputStockMinimo").value = producto.stockMinimo ?? 5;
-        document.getElementById("inputPrecio").value = producto.precio ?? 0;
-        document.getElementById("inputDescripcion").value = producto.descripcion || "";
+        const precioCompraVal = producto.precio_compra ?? producto.precioCompra ?? 0;
+        const precioVentaVal = producto.precio ?? producto.precio_venta ?? producto.precioVenta ?? 0;
+
+        if (inputCodigo) inputCodigo.value = producto.codigo || "";
+        if (inputNombre) inputNombre.value = producto.nombre || "";
+        if (selectCategoria) selectCategoria.value = producto.categoriaId || "";
+        if (selectProveedor) selectProveedor.value = producto.proveedorId || "";
+        if (inputStock) inputStock.value = producto.stock ?? 0;
+        if (inputStockMinimo) inputStockMinimo.value = producto.stockMinimo ?? 5;
+        if (inputPrecioCompra) inputPrecioCompra.value = Number(precioCompraVal).toFixed(2);
+        if (inputPrecio) inputPrecio.value = Number(precioVentaVal).toFixed(2);
+        if (inputDescripcion) inputDescripcion.value = producto.descripcion || "";
+
+        if (currentStockBadge) currentStockBadge.textContent = `Actual: ${producto.stock ?? 0} UND`;
+        if (currentPrecioCompraBadge) currentPrecioCompraBadge.textContent = `Actual: ${AppCore.formatCurrency(precioCompraVal)}`;
+        if (currentPrecioVentaBadge) currentPrecioVentaBadge.textContent = `Actual: ${AppCore.formatCurrency(precioVentaVal)}`;
       } else {
-        document.getElementById("inputStock").value = 0;
-        document.getElementById("inputStockMinimo").value = 5;
+        if (inputStock) inputStock.value = 0;
+        if (inputStockMinimo) inputStockMinimo.value = 5;
+        if (inputPrecioCompra) inputPrecioCompra.value = "";
+        if (inputPrecio) inputPrecio.value = "";
+
+        if (currentStockBadge) currentStockBadge.textContent = "";
+        if (currentPrecioCompraBadge) currentPrecioCompraBadge.textContent = "";
+        if (currentPrecioVentaBadge) currentPrecioVentaBadge.textContent = "";
       }
     }
 
@@ -169,10 +212,19 @@ import { Validations } from "../core/validations.js";
     const nombre = (formData.get("nombre") || "").trim();
     const categoriaId = formData.get("categoriaId");
     const proveedorId = formData.get("proveedorId") || null;
-    const stock = parseInt(formData.get("stock")) || 0;
-    const stockMinimo = parseInt(formData.get("stockMinimo")) || 5;
-    const precio = parseFloat(formData.get("precio")) || 0;
+    const stock = parseInt(formData.get("stock"), 10) || 0;
+    const stockMinimo = parseInt(formData.get("stockMinimo"), 10) || 5;
     const descripcion = (formData.get("descripcion") || "").trim();
+
+    const previo = editingProductId ? appData.productos.find((p) => p.id === editingProductId) : null;
+
+    // Preservar precio de compra existente si no se ingresa
+    const rawPrecioCompra = formData.get("precioCompra");
+    const precioCompraNum = rawPrecioCompra !== null && rawPrecioCompra !== ""
+      ? parseFloat(rawPrecioCompra)
+      : (previo?.precio_compra ?? previo?.precioCompra ?? 0);
+
+    const precioVentaNum = parseFloat(formData.get("precio")) || 0;
 
     const productoError = Validations.firstError([
       [Validations.required(codigo), "El código es obligatorio."],
@@ -180,14 +232,16 @@ import { Validations } from "../core/validations.js";
       [Validations.required(categoriaId), "Selecciona una categoría."],
       [Validations.isNonNegativeInt(formData.get("stock")), "El stock debe ser un número entero mayor o igual a 0."],
       [Validations.isNonNegativeInt(formData.get("stockMinimo")), "El stock mínimo debe ser un número entero mayor o igual a 0."],
-      [precio > 0 && Validations.isNonNegativeNumber(formData.get("precio")), "El precio debe ser un número mayor a 0."],
+      [precioVentaNum > 0 && Validations.isNonNegativeNumber(formData.get("precio")), "El precio de venta debe ser un número mayor a 0."],
+      [precioCompraNum >= 0, "El precio de compra no puede ser un número negativo."],
     ]);
     if (productoError) {
-      alert(productoError);
+      IndustrialToast.error(productoError);
       return;
     }
 
     const producto = {
+      ...(previo || {}),
       id: editingProductId || AppCore.generateId(),
       codigo,
       nombre,
@@ -195,15 +249,21 @@ import { Validations } from "../core/validations.js";
       proveedorId,
       stock,
       stockMinimo,
-      precio,
+      precio: precioVentaNum,
+      precio_venta: precioVentaNum,
+      precioVenta: precioVentaNum,
+      precio_compra: precioCompraNum,
+      precioCompra: precioCompraNum,
       descripcion,
     };
 
     if (editingProductId) {
       const idx = appData.productos.findIndex((p) => p.id === editingProductId);
       if (idx !== -1) appData.productos[idx] = producto;
+      IndustrialToast.success(`Producto "${nombre}" actualizado correctamente.`);
     } else {
       appData.productos.push(producto);
+      IndustrialToast.success(`Producto "${nombre}" agregado al inventario.`);
     }
 
     AppCore.saveAppData(appData);
@@ -217,7 +277,7 @@ import { Validations } from "../core/validations.js";
     e.preventDefault();
     const formData = new FormData(formAjustarStock);
     const tipo = formData.get("tipo");
-    const cantidad = parseInt(formData.get("cantidad"));
+    const cantidad = parseInt(formData.get("cantidad"), 10);
     const motivo = (formData.get("motivo") || "").trim();
 
     const producto = appData.productos.find((p) => p.id === adjustingProductId);
@@ -231,19 +291,20 @@ import { Validations } from "../core/validations.js";
       [Validations.required(motivo, 3), "El motivo es obligatorio (mínimo 3 caracteres)."],
     ]);
     if (adjustError) {
-      alert(adjustError);
+      IndustrialToast.error(adjustError);
       return;
     }
 
     if (tipo === "salida" && cantidad > (producto.stock || 0)) {
-      alert("No hay suficiente stock para realizar la salida.");
+      IndustrialToast.warning("No hay suficiente stock para realizar la salida.");
       return;
     }
 
+    const stockAnterior = producto.stock || 0;
     if (tipo === "entrada") {
-      producto.stock = (Number(producto.stock) || 0) + cantidad;
+      producto.stock = stockAnterior + cantidad;
     } else {
-      producto.stock = (Number(producto.stock) || 0) - cantidad;
+      producto.stock = stockAnterior - cantidad;
     }
 
     appData.movimientos.push({
@@ -258,6 +319,7 @@ import { Validations } from "../core/validations.js";
 
     AppCore.saveAppData(appData);
     closeAdjustModal();
+    IndustrialToast.success(`Stock de "${producto.nombre}" ajustado (${tipo === "entrada" ? "+" : "-"}${cantidad} UND).`);
     renderInventario();
     document.dispatchEvent(new CustomEvent("dataUpdated"));
   });
@@ -270,24 +332,49 @@ import { Validations } from "../core/validations.js";
     const producto = appData.productos.find((p) => p.id === id);
     if (!producto) return;
 
+    if (action === "adjust") {
+      openAdjustModal(producto);
+      return;
+    }
+
     if (action === "view") {
       const categoria = appData.categorias.find((c) => c.id === producto.categoriaId);
+      const precioCompraVal = producto.precio_compra ?? producto.precioCompra ?? 0;
+      const precioVentaVal = producto.precio ?? producto.precio_venta ?? producto.precioVenta ?? 0;
+
       actionSheet.open({
         title: producto.nombre,
         fields: [
           { label: "Código", value: producto.codigo },
           { label: "Categoría", value: categoria?.nombre },
-          { label: "Stock", value: producto.stock ?? 0 },
-          { label: "Stock Mínimo", value: producto.stockMinimo ?? 5 },
-          { label: "Precio", value: AppCore.formatCurrency(producto.precio) },
+          { label: "Stock Actual", value: `${producto.stock ?? 0} UND` },
+          { label: "Stock Mínimo", value: `${producto.stockMinimo ?? 5} UND` },
+          { label: "Precio Compra (Costo)", value: AppCore.formatCurrency(precioCompraVal) },
+          { label: "Precio Venta (PVP)", value: AppCore.formatCurrency(precioVentaVal) },
           { label: "Estado", value: AppCore.getEstadoLabel(AppCore.getEstadoProducto(producto)) },
-          { label: "Descripción", value: producto.descripcion },
+          { label: "Descripción", value: producto.descripcion || "—" },
         ],
         onEdit: () => openProductModal(producto),
-        onDelete: () => {
-          if (confirm(`¿Eliminar el producto "${producto.nombre}"?`)) {
+        onDelete: async () => {
+          const confirmado = await IndustrialDialog.confirm({
+            title: "Eliminar Producto del Inventario",
+            message: `¿Estás seguro de que deseas eliminar permanentemente el producto "${producto.nombre}"?`,
+            confirmText: "Eliminar Registro",
+            confirmVariant: "danger",
+            details: [
+              { label: "Código SKU", value: producto.codigo },
+              { label: "Nombre", value: producto.nombre },
+              { label: "Categoría", value: categoria?.nombre || "—" },
+              { label: "Stock Actual", value: `${producto.stock ?? 0} UND` },
+              { label: "Precio Compra", value: AppCore.formatCurrency(precioCompraVal) },
+              { label: "Precio Venta", value: AppCore.formatCurrency(precioVentaVal) },
+            ],
+          });
+
+          if (confirmado) {
             appData.productos = appData.productos.filter((p) => p.id !== id);
             AppCore.saveAppData(appData);
+            IndustrialToast.success(`Producto "${producto.nombre}" eliminado del inventario.`);
             renderInventario();
             document.dispatchEvent(new CustomEvent("dataUpdated"));
           }
@@ -297,13 +384,16 @@ import { Validations } from "../core/validations.js";
   });
 
   btnExportarInventario?.addEventListener("click", () => {
-    let csv = "Código,Nombre,Categoría,Stock,Stock Mínimo,Precio,Estado\n";
+    let csv = "Código,Nombre,Categoría,Stock,Stock Mínimo,Precio Compra,Precio Venta,Estado\n";
     appData.productos.forEach((p) => {
       const categoria = appData.categorias.find((c) => c.id === p.categoriaId);
       const estado = AppCore.getEstadoProducto(p);
-      csv += `${AppCore.escapeCSV(p.codigo)},${AppCore.escapeCSV(p.nombre)},${AppCore.escapeCSV(categoria?.nombre || "")},${p.stock || 0},${p.stockMinimo || 0},${p.precio || 0},${estado}\n`;
+      const precioCompraVal = p.precio_compra ?? p.precioCompra ?? 0;
+      const precioVentaVal = p.precio ?? p.precio_venta ?? p.precioVenta ?? 0;
+      csv += `${AppCore.escapeCSV(p.codigo)},${AppCore.escapeCSV(p.nombre)},${AppCore.escapeCSV(categoria?.nombre || "")},${p.stock || 0},${p.stockMinimo || 0},${precioCompraVal},${precioVentaVal},${estado}\n`;
     });
     AppCore.downloadCSV(csv, "inventario.csv");
+    IndustrialToast.success("Inventario exportado a CSV correctamente.");
   });
 
   btnAgregarProductoInventario?.addEventListener("click", () => openProductModal());

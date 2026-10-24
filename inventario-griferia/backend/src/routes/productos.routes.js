@@ -46,9 +46,32 @@ router.put("/:id", async (req, res) => {
   try {
     const { codigo_producto, nombre_producto, descripcion, id_categoria, id_proveedor, stock_actual, stock_minimo, precio_compra, precio_venta, estado } = req.body;
     const { rows } = await pool.query(
-      `UPDATE productos SET codigo_producto=$1, nombre_producto=$2, descripcion=$3, id_categoria=$4, id_proveedor=$5,
-       stock_actual=$6, stock_minimo=$7, precio_compra=$8, precio_venta=$9, estado=$10 WHERE id_producto=$11 RETURNING *`,
-      [codigo_producto, nombre_producto, descripcion, id_categoria, id_proveedor, stock_actual, stock_minimo, precio_compra, precio_venta, estado, req.params.id]
+      `UPDATE productos SET
+         codigo_producto = COALESCE($1, codigo_producto),
+         nombre_producto = COALESCE($2, nombre_producto),
+         descripcion = COALESCE($3, descripcion),
+         id_categoria = COALESCE($4, id_categoria),
+         id_proveedor = COALESCE($5, id_proveedor),
+         stock_actual = COALESCE($6, stock_actual),
+         stock_minimo = COALESCE($7, stock_minimo),
+         precio_compra = COALESCE($8, precio_compra),
+         precio_venta = COALESCE($9, precio_venta),
+         estado = COALESCE($10, estado)
+       WHERE id_producto = $11
+       RETURNING *`,
+      [
+        codigo_producto ?? null,
+        nombre_producto ?? null,
+        descripcion ?? null,
+        id_categoria ?? null,
+        id_proveedor ?? null,
+        stock_actual ?? null,
+        stock_minimo ?? null,
+        precio_compra ?? null,
+        precio_venta ?? null,
+        estado ?? null,
+        req.params.id
+      ]
     );
     if (!rows.length) return res.status(404).json({ error: "No encontrado" });
     res.json(rows[0]);

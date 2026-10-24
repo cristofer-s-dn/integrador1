@@ -2,6 +2,7 @@ import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { AuthService } from "../auth/auth-core.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
 
 (function initConfiguracionModule() {
   const appCore = new AppCore();
@@ -373,7 +374,7 @@ import { Validations } from "../core/validations.js";
       ],
     ]);
     if (numError) {
-      alert(numError);
+      IndustrialToast.warning(numError);
       return;
     }
 
@@ -455,7 +456,7 @@ import { Validations } from "../core/validations.js";
         abrirDetalleUsuario(USUARIOS_EJEMPLO[indiceEdicion], indiceEdicion);
       }
       closeUsuarioModal();
-      alert(`Usuario actualizado correctamente.${guardadoBd ? "\nBase de datos: PostgreSQL (usuarios)." : ""}\n\nColaborador: ${USUARIOS_EJEMPLO[indiceEdicion].nombre}\nRol: ${rol}`);
+      IndustrialToast.success(`Usuario ${USUARIOS_EJEMPLO[indiceEdicion].nombre} actualizado correctamente.${guardadoBd ? " (Sincronizado con PostgreSQL)" : ""}`);
       return;
     }
 
@@ -522,9 +523,17 @@ import { Validations } from "../core/validations.js";
     renderUsuarios();
 
     closeUsuarioModal();
-    alert(
-      `Usuario creado correctamente.${guardadoBd ? "\nBase de datos: PostgreSQL (usuarios)." : ""}\n\nColaborador: ${nombreCorto(nombres, apellidos)}\nCorreo institucional: ${correoFinal}\nContraseña provisional: ${contrasena}`
-    );
+    IndustrialDialog.alert({
+      title: "Colaborador Registrado",
+      message: `El usuario ha sido creado correctamente en el sistema.${guardadoBd ? " Guardado en PostgreSQL." : ""}`,
+      details: {
+        "Colaborador": nombreCorto(nombres, apellidos),
+        "Usuario": usuarioFinal,
+        "Correo Institucional": correoFinal,
+        "Contraseña Provisional": contrasena,
+        "Rol Asignado": rol,
+      },
+    });
   });
 
   const USUARIOS_EJEMPLO = [
@@ -681,10 +690,19 @@ import { Validations } from "../core/validations.js";
     const u = USUARIOS_EJEMPLO[indiceDetalle];
     if (!u) return;
 
-    const confirmar = window.confirm(
-      `¿Eliminar al colaborador?\n\n${u.nombre}\n${u.email}\n\nEsta acción no se puede deshacer.`
-    );
-    if (!confirmar) return;
+    const confirmado = await IndustrialDialog.confirm({
+      title: "Eliminar Colaborador",
+      message: "¿Está seguro de que desea eliminar a este colaborador? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar Usuario",
+      confirmVariant: "danger",
+      details: {
+        "Colaborador": u.nombre,
+        "Correo Institucional": u.email,
+        "Rol Asignado": u.rol,
+        "Usuario": u.usuario || "N/A",
+      },
+    });
+    if (!confirmado) return;
 
     let eliminadoBd = false;
     if (u.id != null) {
@@ -692,9 +710,12 @@ import { Validations } from "../core/validations.js";
         await apiUsuarios(`${API_USUARIOS}/${u.id}`, { method: "DELETE" });
         eliminadoBd = true;
       } catch (err) {
-        const continuar = window.confirm(
-          `No se pudo eliminar el registro de PostgreSQL:\n${err.message}\n\n¿Eliminarlo igual de la lista local?`
-        );
+        const continuar = await IndustrialDialog.confirm({
+          title: "Aviso de Base de Datos",
+          message: `No se pudo eliminar el registro en PostgreSQL: ${err.message}. ¿Desea eliminarlo de la lista local de todas formas?`,
+          confirmText: "Eliminar Localmente",
+          confirmVariant: "danger",
+        });
         if (!continuar) return;
       }
     }
@@ -713,8 +734,8 @@ import { Validations } from "../core/validations.js";
 
     renderUsuarios();
     cerrarDetalleUsuario();
-    alert(
-      `Colaborador eliminado.${eliminadoBd ? "\nBase de datos: PostgreSQL (usuarios)." : ""}\n\n${u.nombre}`
+    IndustrialToast.success(
+      `Colaborador ${u.nombre} eliminado correctamente.${eliminadoBd ? " (PostgreSQL actualizado)" : ""}`
     );
   }
 
@@ -741,9 +762,9 @@ import { Validations } from "../core/validations.js";
     usuariosTableBody.innerHTML = USUARIOS_EJEMPLO.map(
       (u, i) => `
       <tr class="usuario-row" data-index="${i}" tabindex="0" role="button" aria-label="Ver detalle de ${u.nombre}">
-        <td><strong>${u.nombre}</strong><br /><small class="text-muted">${u.email}</small></td>
-        <td>${u.rol}</td>
-        <td><span class="badge ${u.estado === "Activo" ? "badge--success" : "badge--danger"}">${u.estado}</span></td>
+        <td class="text-left"><strong>${u.nombre}</strong><br /><small class="text-muted">${u.email}</small></td>
+        <td class="text-left">${u.rol}</td>
+        <td class="text-center"><span class="badge ${u.estado === "Activo" ? "badge--success" : "badge--danger"}">${u.estado}</span></td>
       </tr>`
     ).join("");
   }
@@ -781,7 +802,7 @@ import { Validations } from "../core/validations.js";
       [Validations.isNonNegativeInt(parseInt(document.getElementById("inputStockMinimoGlobal").value)) || parseInt(document.getElementById("inputStockMinimoGlobal").value) >= 0, "El stock mínimo debe ser un número mayor o igual a 0."],
     ]);
     if (cfgError) {
-      alert(cfgError);
+      IndustrialToast.warning(cfgError);
       return;
     }
 
@@ -799,7 +820,7 @@ import { Validations } from "../core/validations.js";
       formatoSku: document.getElementById("inputFormatoSku").value.trim(),
     };
     AppCore.saveAppData(appData);
-    alert("Configuración guardada correctamente.");
+    IndustrialToast.success("Configuración del sistema guardada correctamente.");
   });
 
   btnNuevoUsuario?.addEventListener("click", openUsuarioModal);

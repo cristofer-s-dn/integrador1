@@ -2,6 +2,7 @@ import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { ActionSheet } from "../core/action-sheet.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
 
 (function initClientesModule() {
   const appCore = new AppCore();
@@ -40,13 +41,13 @@ import { Validations } from "../core/validations.js";
     tbody.innerHTML = appData.clientes
       .map((c) => `
         <tr>
-          <td>${c.nombre}</td>
-          <td>${c.contacto || ""}</td>
-          <td>${c.telefono || ""}</td>
-          <td>${c.email || ""}</td>
-          <td>${c.direccion || ""}</td>
-          <td class="table-actions">
-            <button class="btn btn-sm btn-primary" data-action="view" data-id="${c.id}"><i class="bi bi-eye"></i> Ver</button>
+          <td class="text-left font-medium text-slate-900">${c.nombre}</td>
+          <td class="text-left">${c.contacto || "—"}</td>
+          <td class="text-center font-mono text-muted">${c.telefono || "—"}</td>
+          <td class="text-left text-muted">${c.email || "—"}</td>
+          <td class="text-left text-muted">${c.direccion || "—"}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline" data-action="view" data-id="${c.id}"><i class="bi bi-eye"></i> Ver</button>
           </td>
         </tr>`)
       .join("");
@@ -90,7 +91,7 @@ import { Validations } from "../core/validations.js";
       [Validations.required(direccion), "La dirección es obligatoria."],
     ]);
     if (error) {
-      alert(error);
+      IndustrialToast.error(error);
       return;
     }
 
@@ -99,8 +100,10 @@ import { Validations } from "../core/validations.js";
     if (editingId) {
       const idx = appData.clientes.findIndex((c) => c.id === editingId);
       if (idx !== -1) appData.clientes[idx] = cliente;
+      IndustrialToast.success(`Cliente "${nombre}" actualizado.`);
     } else {
       appData.clientes.push(cliente);
+      IndustrialToast.success(`Cliente "${nombre}" registrado.`);
     }
 
     AppCore.saveAppData(appData);
@@ -127,10 +130,23 @@ import { Validations } from "../core/validations.js";
           { label: "Dirección", value: cliente.direccion },
         ],
         onEdit: () => openModal(cliente),
-        onDelete: () => {
-          if (confirm(`¿Eliminar el cliente "${cliente.nombre}"?`)) {
+        onDelete: async () => {
+          const confirmado = await IndustrialDialog.confirm({
+            title: "Eliminar Cliente",
+            message: `¿Estás seguro de que deseas eliminar permanentemente al cliente "${cliente.nombre}"?`,
+            confirmText: "Eliminar Cliente",
+            confirmVariant: "danger",
+            details: [
+              { label: "Cliente", value: cliente.nombre },
+              { label: "Contacto", value: cliente.contacto || "—" },
+              { label: "Teléfono", value: cliente.telefono || "—" },
+            ],
+          });
+
+          if (confirmado) {
             appData.clientes = appData.clientes.filter((c) => c.id !== id);
             AppCore.saveAppData(appData);
+            IndustrialToast.success(`Cliente "${cliente.nombre}" eliminado.`);
             renderClientes();
             document.dispatchEvent(new CustomEvent("dataUpdated"));
           }

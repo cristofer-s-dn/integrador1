@@ -1,0 +1,9 @@
+{
+  "name": "rka-integrador1",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Inventario RKA",
+  "scripts": {
+    "start": "npm start --prefix inventario-griferia/backend",
+    "dev": "npm start --prefix inventario-griferia/backend"
+  }
+}

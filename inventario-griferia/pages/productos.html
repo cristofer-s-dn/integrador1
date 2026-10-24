@@ -95,7 +95,16 @@
             <div class="table-wrapper">
               <table class="table">
                 <thead>
-                  <tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Descripción</th><th>Proveedor</th><th class="text-center">Acciones</th></tr>
+                  <tr>
+                    <th class="text-center font-mono" style="width: 110px;">Código</th>
+                    <th class="text-left">Nombre</th>
+                    <th class="text-left" style="width: 140px;">Categoría</th>
+                    <th class="text-right tabular-nums font-mono" style="width: 100px;">Stock</th>
+                    <th class="text-right tabular-nums font-mono" style="width: 130px;">P. Compra</th>
+                    <th class="text-right tabular-nums font-mono" style="width: 130px;">P. Venta</th>
+                    <th class="text-left" style="width: 180px;">Proveedor</th>
+                    <th class="text-center" style="width: 100px;">Acciones</th>
+                  </tr>
                 </thead>
                 <tbody id="productosTableBody"></tbody>
               </table>
@@ -139,7 +148,9 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="inputStock">Stock Inicial</label>
+              <label class="form-label" for="inputStock">
+                Stock <span class="field-current-value" id="currentStock"></span>
+              </label>
               <input type="number" class="form-control" id="inputStock" name="stock" min="0" step="1" value="0" data-type="int" />
             </div>
             <div class="form-group">
@@ -147,8 +158,16 @@
               <input type="number" class="form-control" id="inputStockMinimo" name="stockMinimo" min="0" step="1" value="5" data-type="int" />
             </div>
             <div class="form-group">
-              <label class="form-label" for="inputPrecio">Precio Unitario (PEN)</label>
-              <input type="number" class="form-control" id="inputPrecio" name="precio" min="0" step="0.01" placeholder="0.00" data-type="double" />
+              <label class="form-label" for="inputPrecioCompra">
+                Precio Compra (Costo S/.) <span class="field-current-value" id="currentPrecioCompra"></span>
+              </label>
+              <input type="number" class="form-control" id="inputPrecioCompra" name="precioCompra" min="0" step="0.01" placeholder="0.00" data-type="double" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inputPrecio">
+                Precio Venta (PVP S/.) <span class="field-current-value" id="currentPrecioVenta"></span>
+              </label>
+              <input type="number" class="form-control" id="inputPrecio" name="precio" min="0" step="0.01" placeholder="0.00" required data-type="double" />
             </div>
             <div class="form-group form-group--full">
               <label class="form-label" for="inputDescripcion">Descripción</label>

@@ -563,3 +563,306 @@ textarea.form-control { min-height: 88px; resize: vertical; }
   .card-header, .card-body { padding: 1rem 1.125rem; }
   .report-card { padding: 1.25rem 1rem; }
 }
+
+/* ==========================================================================
+   UI INDUSTRIAL: Modales, Diálogos de Confirmación y Notificaciones Toast
+   ========================================================================== */
+
+/* Badges de Edición Segura (Safe Editing UX) */
+.field-current-value {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: #1D4ED8;
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* Diálogo Modal de Confirmación y Alerta (IndustrialDialog) */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: dialogFadeIn 0.15s ease-out;
+}
+
+.dialog-backdrop--closing {
+  animation: dialogFadeOut 0.15s ease-in forwards;
+}
+
+.dialog__window {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: dialogPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  background-color: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.dialog__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+}
+
+.dialog__close {
+  background: transparent;
+  border: none;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #64748B;
+  cursor: pointer;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.dialog__close:hover {
+  background-color: #E2E8F0;
+  color: #0F172A;
+}
+
+.dialog__body {
+  padding: 1.25rem;
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.dialog__message {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.925rem;
+  color: #1E293B;
+}
+
+.dialog__details-table {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 4px;
+  padding: 0.625rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.dialog__details-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  gap: 1rem;
+}
+
+.dialog__details-label {
+  color: #64748B;
+  font-weight: 500;
+}
+
+.dialog__details-value {
+  color: #0F172A;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
+  background-color: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+}
+
+.dialog__footer .btn {
+  height: 36px;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+@keyframes dialogFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialogFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes dialogPopIn {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Sistema de Notificaciones Toast */
+.toast-container {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+  width: calc(100vw - 2.5rem);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-left-width: 4px;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  font-size: 0.85rem;
+  color: #0F172A;
+  animation: toastSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
+}
+
+.toast--hiding {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.toast--success {
+  border-left-color: #059669;
+}
+.toast--success .toast__icon {
+  color: #059669;
+}
+
+.toast--error {
+  border-left-color: #DC2626;
+}
+.toast--error .toast__icon {
+  color: #DC2626;
+}
+
+.toast--warning {
+  border-left-color: #D97706;
+}
+.toast--warning .toast__icon {
+  color: #D97706;
+}
+
+.toast--info {
+  border-left-color: #2563EB;
+}
+.toast--info .toast__icon {
+  color: #2563EB;
+}
+
+.toast__icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.toast__content {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast__close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0.125rem 0.25rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.toast__close:hover {
+  color: #0F172A;
+  background-color: #F1F5F9;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Refinamiento Técnico de Modales Estándar (.modal) */
+.modal {
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.modal__dialog {
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.modal__header {
+  background-color: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 0.875rem 1.25rem;
+}
+
+.modal__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+}
+
+.modal__footer {
+  background-color: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  padding: 0.875rem 1.25rem;
+}
+
+.modal__footer .btn {
+  height: 36px;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+

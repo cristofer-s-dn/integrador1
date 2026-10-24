@@ -2,6 +2,7 @@ import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { ActionSheet } from "../core/action-sheet.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
 
 (function initProveedoresModule() {
   const appCore = new AppCore();
@@ -40,13 +41,13 @@ import { Validations } from "../core/validations.js";
     tbody.innerHTML = appData.proveedores
       .map((p) => `
         <tr>
-          <td>${p.nombre}</td>
-          <td>${p.contacto || ""}</td>
-          <td>${p.telefono || ""}</td>
-          <td>${p.email || ""}</td>
-          <td>${p.direccion || ""}</td>
-          <td class="table-actions">
-            <button class="btn btn-sm btn-primary" data-action="view" data-id="${p.id}"><i class="bi bi-eye"></i> Ver</button>
+          <td class="text-left font-medium text-slate-900">${p.nombre}</td>
+          <td class="text-left">${p.contacto || "—"}</td>
+          <td class="text-center font-mono text-muted">${p.telefono || "—"}</td>
+          <td class="text-left text-muted">${p.email || "—"}</td>
+          <td class="text-left text-muted">${p.direccion || "—"}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline" data-action="view" data-id="${p.id}"><i class="bi bi-eye"></i> Ver</button>
           </td>
         </tr>`)
       .join("");
@@ -89,7 +90,7 @@ import { Validations } from "../core/validations.js";
       [!email || Validations.isEmail(email), "El email no tiene un formato válido."],
     ]);
     if (error) {
-      alert(error);
+      IndustrialToast.error(error);
       return;
     }
 
@@ -98,8 +99,10 @@ import { Validations } from "../core/validations.js";
     if (editingId) {
       const idx = appData.proveedores.findIndex((p) => p.id === editingId);
       if (idx !== -1) appData.proveedores[idx] = proveedor;
+      IndustrialToast.success(`Proveedor "${nombre}" actualizado.`);
     } else {
       appData.proveedores.push(proveedor);
+      IndustrialToast.success(`Proveedor "${nombre}" registrado.`);
     }
 
     AppCore.saveAppData(appData);
@@ -126,10 +129,23 @@ import { Validations } from "../core/validations.js";
           { label: "Dirección", value: proveedor.direccion },
         ],
         onEdit: () => openModal(proveedor),
-        onDelete: () => {
-          if (confirm(`¿Eliminar el proveedor "${proveedor.nombre}"?`)) {
+        onDelete: async () => {
+          const confirmado = await IndustrialDialog.confirm({
+            title: "Eliminar Proveedor",
+            message: `¿Estás seguro de que deseas eliminar al proveedor "${proveedor.nombre}"?`,
+            confirmText: "Eliminar Proveedor",
+            confirmVariant: "danger",
+            details: [
+              { label: "Proveedor", value: proveedor.nombre },
+              { label: "Contacto", value: proveedor.contacto || "—" },
+              { label: "Teléfono", value: proveedor.telefono || "—" },
+            ],
+          });
+
+          if (confirmado) {
             appData.proveedores = appData.proveedores.filter((p) => p.id !== id);
             AppCore.saveAppData(appData);
+            IndustrialToast.success(`Proveedor "${proveedor.nombre}" eliminado.`);
             renderProveedores();
             document.dispatchEvent(new CustomEvent("dataUpdated"));
           }

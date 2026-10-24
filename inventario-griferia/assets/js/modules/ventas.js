@@ -1,6 +1,7 @@
 import { AppCore } from "../core/app-core.js";
 import { LayoutManager } from "../core/layout.js";
 import { Validations } from "../core/validations.js";
+import { IndustrialToast } from "../core/industrial-ui.js";
 
 (function initVentasModule() {
   const appCore = new AppCore();
@@ -160,14 +161,14 @@ import { Validations } from "../core/validations.js";
         const estadoLabel = v.estado === "Completado" ? "Completado" : "Pendiente";
         return `
           <tr>
-            <td>#${v.id}</td>
-            <td>${AppCore.formatDate(v.fecha)}</td>
-            <td>${v.cliente}</td>
-            <td>${v.producto}</td>
-            <td>${v.cantidad}</td>
-            <td>${AppCore.formatCurrency(v.monto)}</td>
-            <td>${v.metodoPago}</td>
-            <td><span class="badge ${estadoClass}">${estadoLabel}</span></td>
+            <td class="text-center font-mono font-semibold text-muted">#${v.id}</td>
+            <td class="text-center font-mono text-muted">${AppCore.formatDate(v.fecha)}</td>
+            <td class="text-left font-medium text-slate-900">${v.cliente}</td>
+            <td class="text-left">${v.producto}</td>
+            <td class="text-right font-mono tabular-nums font-semibold">${v.cantidad}</td>
+            <td class="text-right font-mono tabular-nums font-semibold text-primary">${AppCore.formatCurrency(v.monto)}</td>
+            <td class="text-center">${v.metodoPago}</td>
+            <td class="text-center"><span class="badge ${estadoClass}">${estadoLabel}</span></td>
           </tr>`;
       })
       .join("");
@@ -210,11 +211,11 @@ import { Validations } from "../core/validations.js";
       [Validations.isPositiveInt(formData.get("cantidad")), "La cantidad debe ser un número entero mayor a 0."],
     ]);
     if (error) {
-      alert(error);
+      IndustrialToast.error(error);
       return;
     }
     if (cantidad > (producto.stock || 0)) {
-      alert("No hay suficiente stock para realizar la venta.");
+      IndustrialToast.warning("No hay suficiente stock para realizar la venta.");
       return;
     }
 
@@ -232,6 +233,7 @@ import { Validations } from "../core/validations.js";
 
     AppCore.saveAppData(appData);
     closeModal();
+    IndustrialToast.success("Venta registrada y stock actualizado correctamente.");
     renderKPIs(getVentas());
     renderTabla();
     populateProductos();
