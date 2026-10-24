@@ -456,7 +456,7 @@ import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
         abrirDetalleUsuario(USUARIOS_EJEMPLO[indiceEdicion], indiceEdicion);
       }
       closeUsuarioModal();
-      IndustrialToast.success(`Usuario ${USUARIOS_EJEMPLO[indiceEdicion].nombre} actualizado correctamente.${guardadoBd ? " (Sincronizado con PostgreSQL)" : ""}`);
+      IndustrialToast.success(`Usuario ${USUARIOS_EJEMPLO[indiceEdicion].nombre} actualizado correctamente.`);
       return;
     }
 
@@ -525,7 +525,7 @@ import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
     closeUsuarioModal();
     IndustrialDialog.alert({
       title: "Colaborador Registrado",
-      message: `El usuario ha sido creado correctamente en el sistema.${guardadoBd ? " Guardado en PostgreSQL." : ""}`,
+      message: "El usuario ha sido registrado exitosamente en el sistema.",
       details: {
         "Colaborador": nombreCorto(nombres, apellidos),
         "Usuario": usuarioFinal,
@@ -711,8 +711,8 @@ import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
         eliminadoBd = true;
       } catch (err) {
         const continuar = await IndustrialDialog.confirm({
-          title: "Aviso de Base de Datos",
-          message: `No se pudo eliminar el registro en PostgreSQL: ${err.message}. ¿Desea eliminarlo de la lista local de todas formas?`,
+          title: "Aviso de Sincronización",
+          message: `No se pudo sincronizar la eliminación con el servidor (${err.message}). ¿Desea eliminar el registro localmente?`,
           confirmText: "Eliminar Localmente",
           confirmVariant: "danger",
         });
@@ -735,7 +735,7 @@ import { IndustrialToast, IndustrialDialog } from "../core/industrial-ui.js";
     renderUsuarios();
     cerrarDetalleUsuario();
     IndustrialToast.success(
-      `Colaborador ${u.nombre} eliminado correctamente.${eliminadoBd ? " (PostgreSQL actualizado)" : ""}`
+      `Colaborador ${u.nombre} eliminado correctamente.`
     );
   }
 
